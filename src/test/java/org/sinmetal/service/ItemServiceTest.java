@@ -6,6 +6,8 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.*;
 import org.sinmetal.*;
+import org.sinmetal.controller.*;
+import org.sinmetal.controller.ItemController.*;
 import org.sinmetal.meta.*;
 import org.sinmetal.model.*;
 import org.slim3.datastore.*;
@@ -80,5 +82,29 @@ public class ItemServiceTest extends AbstructAppEngineTestCase {
 		int after = tester.count(Item.class);
 
 		assertThat(before, is(after));
+	}
+
+	/**
+	 * 新規作成 テスト
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testCreate() throws Exception {
+		final String EMAIl = "user@example.com";
+
+		ItemController.PostForm form = new PostForm();
+		form.title = "sample title";
+		form.content = "sample content";
+
+		Item item = ItemService.create(EMAIl, form);
+
+		Item stored = Datastore.getOrNull(ItemMeta.get(), item.getKey());
+		assertThat(stored, notNullValue());
+		assertThat(stored.getEmail(), is(EMAIl));
+		assertThat(stored.getTitle(), is(form.title));
+		assertThat(stored.getContent(), is(form.content));
+		assertThat(stored.getCreatedAt(), notNullValue());
+		assertThat(stored.getUpdatedAt(), notNullValue());
 	}
 }
