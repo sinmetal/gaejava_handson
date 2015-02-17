@@ -4,13 +4,19 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.util.*;
+
 import javax.servlet.http.*;
 
 import org.junit.*;
 import org.sinmetal.*;
+import org.sinmetal.controller.ItemController.PostForm;
 import org.sinmetal.meta.*;
 import org.sinmetal.model.*;
+import org.sinmetal.service.*;
 import org.slim3.datastore.*;
+
+import com.google.appengine.api.datastore.*;
 
 /**
  * {@link ItemController} のテスト
@@ -65,5 +71,58 @@ public class ItemControllerTest extends AbstructControllerTestCase {
 		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
 		assertThat(tester.response.getOutputAsString(),
 				is("[\"title is required.\"]"));
+	}
+
+	/**
+	 * {@link Item} が0件の場合に、正常に一覧取得ができることを確認
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testGetList() throws Exception {
+		Map<Key, Item> testData = new HashMap<>();
+		{
+			for (int i = 0; i < 10; i++) {
+				PostForm form = new PostForm();
+				form.title = "sample title" + i;
+				form.content = "sample content" + i;
+				Item item = ItemService.create("user" + i + "@example.com",
+						form);
+				testData.put(item.getKey(), item);
+			}
+		}
+
+		tester.request.setMethod("GET");
+		tester.start(ItemController.PATH);
+		assertThat(tester.response.getStatus(), is(HttpServletResponse.SC_OK));
+		assertThat(tester.response.getContentType(), is("application/json"));
+		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
+		Item[] results = ItemMeta.get().jsonToModels(
+				tester.response.getOutputAsString());
+		assertThat(results.length, is(testData.size()));
+		for (Item item : results) {
+			assertThat(testData.containsKey(item.getKey()), is(true));
+			Item src = testData.get(item.getKey());
+			assertThat(item.getEmail(), is(src.getEmail()));
+			assertThat(item.getTitle(), is(src.getTitle()));
+			assertThat(item.getContent(), is(src.getContent()));
+			assertThat(item.getCreatedAt(), is(src.getCreatedAt()));
+			assertThat(item.getUpdatedAt(), is(src.getUpdatedAt()));
+		}
+	}
+
+	/**
+	 * {@link Item} が0件の場合に、正常に一覧取得ができることを確認
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testGetListForDataEmpty() throws Exception {
+		tester.request.setMethod("GET");
+		tester.start(ItemController.PATH);
+		assertThat(tester.response.getStatus(), is(HttpServletResponse.SC_OK));
+		assertThat(tester.response.getContentType(), is("application/json"));
+		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
+		assertThat(tester.response.getOutputAsString(), is("[]"));
 	}
 }

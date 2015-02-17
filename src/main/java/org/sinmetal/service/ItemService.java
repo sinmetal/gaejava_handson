@@ -62,4 +62,25 @@ public class ItemService {
 		Datastore.put(item);
 		return item;
 	}
+
+	/**
+	 * {@link Item} を更新日時の降順で全件取得する
+	 * 
+	 * Index遅延を考慮した用心深い実装になっている。
+	 * 
+	 * @return 更新日時の降順の {@link Item} 全件
+	 */
+	public static List<Item> querySortUpdatedAtDesc() {
+		List<Key> keys = Datastore.query(meta).sort(meta.updatedAt.desc)
+				.asKeyList();
+		Map<Key, Item> map = Datastore.getAsMap(meta, keys);
+
+		List<Item> results = new ArrayList<>();
+		for (Key key : keys) {
+			if (map.containsKey(key)) {
+				results.add(map.get(key));
+			}
+		}
+		return results;
+	}
 }

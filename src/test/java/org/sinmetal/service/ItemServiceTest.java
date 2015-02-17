@@ -2,12 +2,14 @@ package org.sinmetal.service;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import java.util.*;
 
 import org.junit.*;
 import org.sinmetal.*;
 import org.sinmetal.controller.*;
-import org.sinmetal.controller.ItemController.*;
+import org.sinmetal.controller.ItemController.PostForm;
 import org.sinmetal.meta.*;
 import org.sinmetal.model.*;
 import org.slim3.datastore.*;
@@ -106,5 +108,52 @@ public class ItemServiceTest extends AbstructAppEngineTestCase {
 		assertThat(stored.getContent(), is(form.content));
 		assertThat(stored.getCreatedAt(), notNullValue());
 		assertThat(stored.getUpdatedAt(), notNullValue());
+	}
+
+	/**
+	 * Query時に対象データが無い場合、空のListを返すことをテスト
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testQuerySortUpdatedAtDescForEmpty() throws Exception {
+		List<Item> stored = ItemService.querySortUpdatedAtDesc();
+		assertThat(stored, notNullValue());
+		assertThat(stored.size(), is(0));
+	}
+
+	/**
+	 * Queryが実行できることを確認するテスト
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testQuerySortUpdatedAtDesc() throws Exception {
+		final int SIZE = 10;
+		Map<Key, Item> testData = new HashMap<>();
+		{
+			for (int i = 0; i < SIZE; i++) {
+				PostForm form = new PostForm();
+				form.title = "sample title" + i;
+				form.content = "sample content" + i;
+				Item item = ItemService.create("user" + i + "@example.com",
+						form);
+				testData.put(item.getKey(), item);
+			}
+		}
+
+		List<Item> stored = ItemService.querySortUpdatedAtDesc();
+		assertThat(stored, notNullValue());
+		assertThat(stored.size(), is(SIZE));
+
+		for (Item item : stored) {
+			assertThat(testData.containsKey(item.getKey()), is(true));
+			Item src = testData.get(item.getKey());
+			assertThat(item.getEmail(), is(src.getEmail()));
+			assertThat(item.getTitle(), is(src.getTitle()));
+			assertThat(item.getContent(), is(src.getContent()));
+			assertThat(item.getCreatedAt(), is(src.getCreatedAt()));
+			assertThat(item.getUpdatedAt(), is(src.getUpdatedAt()));
+		}
 	}
 }

@@ -26,6 +26,9 @@ public class ItemController extends AbstructController {
 		if (isPost()) {
 			doPost();
 			return null;
+		} else if (isGet()) {
+			list();
+			return null;
 		} else {
 			response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
 			return null;
@@ -83,5 +86,15 @@ public class ItemController extends AbstructController {
 			}
 			return errors;
 		}
+	}
+
+	void list() throws Exception {
+		List<Item> items = ItemService.querySortUpdatedAtDesc();
+
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.setContentType(APPLICATION_JSON);
+		response.setCharacterEncoding(UTF8);
+		response.getWriter().write(ItemMeta.get().modelsToJson(items));
+		response.flushBuffer();
 	}
 }
