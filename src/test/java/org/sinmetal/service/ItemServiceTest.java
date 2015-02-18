@@ -2,6 +2,7 @@ package org.sinmetal.service;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.*;
@@ -155,5 +156,34 @@ public class ItemServiceTest extends AbstructAppEngineTestCase {
 			assertThat(item.getCreatedAt(), is(src.getCreatedAt()));
 			assertThat(item.getUpdatedAt(), is(src.getUpdatedAt()));
 		}
+	}
+
+	/**
+	 * 対象の {@link Key} の {@link Item} が無い場合、nullになることをテスト
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testGetOrNullForEmpty() throws Exception {
+		Key key = ItemService.createKey("hoge");
+		Item stored = ItemService.getOrNull(key);
+		assertThat(stored, nullValue());
+	}
+
+	/**
+	 * 対象の {@link Key} の {@link Item} が無い場合、nullになることをテスト
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testGetOrNull() throws Exception {
+		Key key;
+		{
+			PostForm form = new PostForm();
+			key = ItemService.create("user@example.com", form).getKey();
+		}
+
+		Item stored = ItemService.getOrNull(key);
+		assertThat(stored, notNullValue());
 	}
 }

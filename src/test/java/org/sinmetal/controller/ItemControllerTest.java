@@ -125,4 +125,49 @@ public class ItemControllerTest extends AbstructControllerTestCase {
 		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
 		assertThat(tester.response.getOutputAsString(), is("[]"));
 	}
+
+	@Test
+	public void testGet() throws Exception {
+		Item testData;
+		{
+			PostForm form = new PostForm();
+			form.title = "sample title";
+			form.content = "sample content";
+			testData = ItemService.create("user@example.com", form);
+		}
+		String strKey = Datastore.keyToString(testData.getKey());
+
+		tester.request.setMethod("GET");
+		tester.start(ItemController.PATH + "/" + strKey);
+
+		assertThat(tester.response.getStatus(), is(HttpServletResponse.SC_OK));
+		assertThat(tester.response.getContentType(), is("application/json"));
+		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
+
+		Item item = ItemMeta.get().jsonToModel(
+				tester.response.getOutputAsString());
+		assertThat(item.getKey(), is(testData.getKey()));
+		assertThat(item.getEmail(), is(testData.getEmail()));
+		assertThat(item.getTitle(), is(testData.getTitle()));
+		assertThat(item.getContent(), is(testData.getContent()));
+		assertThat(item.getCreatedAt(), is(testData.getCreatedAt()));
+		assertThat(item.getUpdatedAt(), is(testData.getUpdatedAt()));
+	}
+
+	@Test
+	public void testGetForDataEmpty() throws Exception {
+		Key key = ItemService.createKey("hoge");
+		String strKey = Datastore.keyToString(key);
+
+		tester.request.setMethod("GET");
+		tester.start(ItemController.PATH + "/" + strKey);
+
+		assertThat(tester.response.getStatus(),
+				is(HttpServletResponse.SC_NOT_FOUND));
+		assertThat(tester.response.getContentType(), is("application/json"));
+		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
+		assertThat(
+				tester.response.getOutputAsString(),
+				is("[\"agpVbml0IFRlc3Rzcg4LEgRJdGVtIgRob2dlDA is not found.\"]"));
+	}
 }

@@ -9,7 +9,10 @@ import org.sinmetal.meta.*;
 import org.sinmetal.model.*;
 import org.sinmetal.service.*;
 import org.slim3.controller.*;
+import org.slim3.datastore.*;
 import org.slim3.util.*;
+
+import com.google.appengine.api.datastore.*;
 
 /**
  * {@link Item} に関するAPI
@@ -27,7 +30,12 @@ public class ItemController extends AbstructController {
 			doPost();
 			return null;
 		} else if (isGet()) {
-			list();
+			String strKey = request.getParameter("strKey");
+			if (StringUtil.isEmpty(strKey)) {
+				list();
+			} else {
+				doGet(strKey);
+			}
 			return null;
 		} else {
 			response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
@@ -95,6 +103,40 @@ public class ItemController extends AbstructController {
 		response.setContentType(APPLICATION_JSON);
 		response.setCharacterEncoding(UTF8);
 		response.getWriter().write(ItemMeta.get().modelsToJson(items));
+		response.flushBuffer();
+	}
+
+	void doGet(String strKey) throws Exception {
+		Key key;
+		try {
+			key = Datastore.stringToKey(strKey);
+		} catch (IllegalArgumentException e) {
+			List<String> errors = new ArrayList<>();
+			errors.add("invalid key");
+
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.setContentType(APPLICATION_JSON);
+			response.setCharacterEncoding(UTF8);
+			new ObjectMapper().writeValue(response.getWriter(), errors);
+			return;
+		}
+
+		Item item = ItemService.getOrNull(key);
+		if (item == null) {
+			List<String> errors = new ArrayList<>();
+			errors.add(strKey + " is not found.");
+
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+			response.setContentType(APPLICATION_JSON);
+			response.setCharacterEncoding(UTF8);
+			new ObjectMapper().writeValue(response.getWriter(), errors);
+			return;
+		}
+
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.setContentType(APPLICATION_JSON);
+		response.setCharacterEncoding(UTF8);
+		response.getWriter().write(ItemMeta.get().modelToJson(item));
 		response.flushBuffer();
 	}
 }

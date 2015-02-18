@@ -83,4 +83,15 @@ public class ItemService {
 		}
 		return results;
 	}
+
+	/**
+	 * 指定した {@link Key} の {@link Item} を取得する。
+	 * 
+	 * @param key
+	 *            {@link Item} {@link Key}
+	 * @return {@link Item} or null
+	 */
+	public static Item getOrNull(Key key) {
+		return Datastore.getOrNull(meta, key);
+	}
 }
