@@ -29,6 +29,9 @@ public class ItemController extends AbstructController {
 		if (isPost()) {
 			doPost();
 			return null;
+		} else if (isPut()) {
+			doPut();
+			return null;
 		} else if (isGet()) {
 			String strKey = request.getParameter("strKey");
 			if (StringUtil.isEmpty(strKey)) {
@@ -73,6 +76,83 @@ public class ItemController extends AbstructController {
 	}
 
 	public static class PostForm {
+
+		/** 記事タイトル */
+		public String title;
+
+		/** 本文 */
+		public String content;
+
+		/**
+		 * validate
+		 * 
+		 * errorが無い時は、空のListを返す
+		 * 
+		 * @return error message list
+		 */
+		public List<String> validate() {
+			List<String> errors = new ArrayList<>();
+			if (StringUtil.isEmpty(title)) {
+				errors.add("title is required.");
+			}
+			return errors;
+		}
+	}
+
+	void doPut() throws Exception {
+		final ObjectMapper om = new ObjectMapper();
+
+		String strKey = request.getParameter("strKey");
+		if (StringUtil.isEmpty(strKey)) {
+			List<String> errors = new ArrayList<>();
+			errors.add("key is required");
+
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.setContentType(APPLICATION_JSON);
+			response.setCharacterEncoding(UTF8);
+			om.writeValue(response.getWriter(), errors);
+			return;
+		}
+
+		Key key;
+		try {
+			key = Datastore.stringToKey(strKey);
+		} catch (IllegalArgumentException e) {
+			List<String> errors = new ArrayList<>();
+			errors.add("invalid key");
+
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.setContentType(APPLICATION_JSON);
+			response.setCharacterEncoding(UTF8);
+			om.writeValue(response.getWriter(), errors);
+			return;
+		}
+
+		PutForm form;
+		try {
+			form = om.readValue(request.getInputStream(), PutForm.class);
+		} catch (Throwable e) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+		List<String> errors = form.validate();
+		if (errors.isEmpty() == false) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.setContentType(APPLICATION_JSON);
+			response.setCharacterEncoding(UTF8);
+			om.writeValue(response.getWriter(), errors);
+			return;
+		}
+
+		Item stored = ItemService.update(key, form);
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.setContentType(APPLICATION_JSON);
+		response.setCharacterEncoding(UTF8);
+		response.getWriter().write(ItemMeta.get().modelToJson(stored));
+		response.flushBuffer();
+	}
+
+	public static class PutForm {
 
 		/** 記事タイトル */
 		public String title;

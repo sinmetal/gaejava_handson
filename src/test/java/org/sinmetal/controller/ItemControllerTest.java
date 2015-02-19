@@ -74,6 +74,71 @@ public class ItemControllerTest extends AbstructControllerTestCase {
 	}
 
 	/**
+	 * 指定した {@link Item} が更新されることを確認
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testUpdatedItem() throws Exception {
+		Item testData;
+		{
+			PostForm form = new PostForm();
+			form.title = "sample title";
+			form.content = "sample content";
+			testData = ItemService.create("user@example.com", form);
+		}
+		String strKey = Datastore.keyToString(testData.getKey());
+
+		tester.request.setMethod("PUT");
+		tester.request.setInputStream(TestUtil
+				.getResource("/json/item/put_ok.json"));
+		tester.start(ItemController.PATH + "/" + strKey);
+		assertThat(tester.response.getStatus(), is(HttpServletResponse.SC_OK));
+		assertThat(tester.response.getContentType(), is("application/json"));
+		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
+
+		Item responseItem = ItemMeta.get().jsonToModel(
+				tester.response.getOutputAsString());
+
+		Item stored = Datastore
+				.getOrNull(ItemMeta.get(), responseItem.getKey());
+		assertThat(stored, notNullValue());
+		assertThat(stored.getTitle(), is("new title"));
+		assertThat(stored.getContent(), is("new content"));
+		assertThat(stored.getCreatedAt(), notNullValue());
+		assertThat(stored.getUpdatedAt(), notNullValue());
+	}
+
+	/**
+	 * {@link Item} 更新時にTitleが無い場合、Errorになることを確認するテスト
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testUpdatedItemNoTitle() throws Exception {
+		Item testData;
+		{
+			PostForm form = new PostForm();
+			form.title = "sample title";
+			form.content = "sample content";
+			testData = ItemService.create("user@example.com", form);
+		}
+		String strKey = Datastore.keyToString(testData.getKey());
+
+		tester.request.setMethod("PUT");
+		tester.request.setInputStream(TestUtil
+				.getResource("/json/item/put_ng.json"));
+		tester.start(ItemController.PATH + "/" + strKey);
+
+		assertThat(tester.response.getStatus(),
+				is(HttpServletResponse.SC_BAD_REQUEST));
+		assertThat(tester.response.getContentType(), is("application/json"));
+		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
+		assertThat(tester.response.getOutputAsString(),
+				is("[\"title is required.\"]"));
+	}
+
+	/**
 	 * {@link Item} が0件の場合に、正常に一覧取得ができることを確認
 	 * 
 	 * @throws Exception

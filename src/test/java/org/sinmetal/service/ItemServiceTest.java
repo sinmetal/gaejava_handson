@@ -1,6 +1,7 @@
 package org.sinmetal.service;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -10,7 +11,7 @@ import java.util.*;
 import org.junit.*;
 import org.sinmetal.*;
 import org.sinmetal.controller.*;
-import org.sinmetal.controller.ItemController.PostForm;
+import org.sinmetal.controller.ItemController.*;
 import org.sinmetal.meta.*;
 import org.sinmetal.model.*;
 import org.slim3.datastore.*;
@@ -109,6 +110,38 @@ public class ItemServiceTest extends AbstructAppEngineTestCase {
 		assertThat(stored.getContent(), is(form.content));
 		assertThat(stored.getCreatedAt(), notNullValue());
 		assertThat(stored.getUpdatedAt(), notNullValue());
+	}
+
+	/**
+	 * 更新 テスト
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testUpdate() throws Exception {
+		final String EMAIl = "user@example.com";
+		Item newItem;
+		{
+			ItemController.PostForm form = new PostForm();
+			form.title = "sample title";
+			form.content = "sample content";
+
+			newItem = ItemService.create(EMAIl, form);
+		}
+
+		PutForm form = new PutForm();
+		form.title = "new title";
+		form.content = "new content";
+
+		ItemService.update(newItem.getKey(), form);
+
+		Item stored = Datastore.getOrNull(ItemMeta.get(), newItem.getKey());
+		assertThat(stored, notNullValue());
+		assertThat(stored.getEmail(), is(EMAIl));
+		assertThat(stored.getTitle(), is(form.title));
+		assertThat(stored.getContent(), is(form.content));
+		assertThat(stored.getCreatedAt(), is(newItem.getCreatedAt()));
+		assertThat(stored.getUpdatedAt(), not(newItem.getUpdatedAt()));
 	}
 
 	/**

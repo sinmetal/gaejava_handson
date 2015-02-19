@@ -2,7 +2,7 @@ package org.sinmetal.service;
 
 import java.util.*;
 
-import org.sinmetal.controller.ItemController.PostForm;
+import org.sinmetal.controller.ItemController.*;
 import org.sinmetal.meta.*;
 import org.sinmetal.model.*;
 import org.slim3.datastore.*;
@@ -61,6 +61,32 @@ public class ItemService {
 		item.setContent(form.content);
 		Datastore.put(item);
 		return item;
+	}
+
+	/**
+	 * 指定した {@link Key} の {@link Item} を更新する
+	 * 
+	 * @param key
+	 *            {@link Item} {@link Key}
+	 * @param form
+	 *            RequestData
+	 * @return 更新した {@link Item}
+	 */
+	public static Item update(Key key, PutForm form) {
+		Transaction tx = Datastore.beginTransaction();
+		try {
+			Item item = Datastore.get(tx, meta, key);
+			item.setTitle(form.title);
+			item.setContent(form.content);
+			Datastore.put(item);
+			tx.commit();
+
+			return item;
+		} finally {
+			if (tx != null && tx.isActive()) {
+				tx.rollback();
+			}
+		}
 	}
 
 	/**
