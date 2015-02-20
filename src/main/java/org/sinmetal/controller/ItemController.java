@@ -32,6 +32,9 @@ public class ItemController extends AbstructController {
 		} else if (isPut()) {
 			doPut();
 			return null;
+		} else if (isDelete()) {
+			doDelete();
+			return null;
 		} else if (isGet()) {
 			String strKey = request.getParameter("strKey");
 			if (StringUtil.isEmpty(strKey)) {
@@ -198,6 +201,104 @@ public class ItemController extends AbstructController {
 			if (StringUtil.isEmpty(title)) {
 				errors.add("title is required.");
 			}
+			if (version == null) {
+				errors.add("version is required.");
+			}
+			return errors;
+		}
+	}
+
+	void doDelete() throws Exception {
+		final ObjectMapper om = new ObjectMapper();
+
+		String strKey = request.getParameter("strKey");
+		if (StringUtil.isEmpty(strKey)) {
+			List<String> errors = new ArrayList<>();
+			errors.add("key is required");
+
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.setContentType(APPLICATION_JSON);
+			response.setCharacterEncoding(UTF8);
+			om.writeValue(response.getWriter(), errors);
+			return;
+		}
+
+		Key key;
+		try {
+			key = Datastore.stringToKey(strKey);
+		} catch (IllegalArgumentException e) {
+			List<String> errors = new ArrayList<>();
+			errors.add("invalid key");
+
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.setContentType(APPLICATION_JSON);
+			response.setCharacterEncoding(UTF8);
+			om.writeValue(response.getWriter(), errors);
+			return;
+		}
+
+		DeleteForm form;
+		try {
+			form = om.readValue(request.getInputStream(), DeleteForm.class);
+		} catch (Throwable e) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+		List<String> errors = form.validate();
+		if (errors.isEmpty() == false) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.setContentType(APPLICATION_JSON);
+			response.setCharacterEncoding(UTF8);
+			om.writeValue(response.getWriter(), errors);
+			return;
+		}
+
+		try {
+			ItemService.delete(key, form);
+		} catch (ConcurrentModificationException e) {
+			// 楽観的排他制御による衝突だけでなく、Txがぶつかった場合も、ここに来ることに注意
+			errors = new ArrayList<String>();
+			errors.add("conflict.");
+
+			response.setStatus(HttpServletResponse.SC_CONFLICT);
+			response.setContentType(APPLICATION_JSON);
+			response.setCharacterEncoding(UTF8);
+			om.writeValue(response.getWriter(), errors);
+			return;
+		} catch (EntityNotFoundRuntimeException e) {
+			errors = new ArrayList<>();
+			errors.add(strKey + " is not found.");
+
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+			response.setContentType(APPLICATION_JSON);
+			response.setCharacterEncoding(UTF8);
+			om.writeValue(response.getWriter(), errors);
+			return;
+		}
+
+		List<String> messages = new ArrayList<>();
+		messages.add("delete done.");
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.setContentType(APPLICATION_JSON);
+		response.setCharacterEncoding(UTF8);
+		om.writeValue(response.getWriter(), messages);
+		response.flushBuffer();
+	}
+
+	public static class DeleteForm {
+
+		/** 楽観的排他制御用のversion */
+		public Long version;
+
+		/**
+		 * validate
+		 * 
+		 * errorが無い時は、空のListを返す
+		 * 
+		 * @return error message list
+		 */
+		public List<String> validate() {
+			List<String> errors = new ArrayList<>();
 			if (version == null) {
 				errors.add("version is required.");
 			}

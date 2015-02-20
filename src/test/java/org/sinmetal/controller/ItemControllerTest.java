@@ -2,6 +2,7 @@ package org.sinmetal.controller;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.*;
@@ -182,6 +183,88 @@ public class ItemControllerTest extends AbstructControllerTestCase {
 				.getResource("/json/item/put_ok.json"));
 		tester.start(ItemController.PATH + "/" + strKey);
 
+		assertThat(tester.response.getStatus(),
+				is(HttpServletResponse.SC_NOT_FOUND));
+		assertThat(tester.response.getContentType(), is("application/json"));
+		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
+		assertThat(
+				tester.response.getOutputAsString(),
+				is("[\"agpVbml0IFRlc3RzchELEgRJdGVtIgdubyBkYXRhDA is not found.\"]"));
+	}
+
+	/**
+	 * 指定した {@link Item} が削除されることを確認
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testDeletedItem() throws Exception {
+		Item testData;
+		{
+			PostForm form = new PostForm();
+			form.title = "sample title";
+			form.content = "sample content";
+			testData = ItemService.create("user@example.com", form);
+		}
+		String strKey = Datastore.keyToString(testData.getKey());
+
+		tester.request.setMethod("DELETE");
+		tester.request.setInputStream(TestUtil
+				.getResource("/json/item/delete_ok.json"));
+		tester.start(ItemController.PATH + "/" + strKey);
+		assertThat(tester.response.getStatus(), is(HttpServletResponse.SC_OK));
+		assertThat(tester.response.getContentType(), is("application/json"));
+		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
+		assertThat(tester.response.getOutputAsString(),
+				is("[\"delete done.\"]"));
+
+		Item stored = Datastore.getOrNull(ItemMeta.get(), testData.getKey());
+		assertThat(stored, nullValue());
+	}
+
+	/**
+	 * {@link Item} 削除時楽観的排他制御がぶつかった場合にErrorになることをテスト
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testDeletedItemConflict() throws Exception {
+		Item testData;
+		{
+			PostForm form = new PostForm();
+			form.title = "sample title";
+			form.content = "sample content";
+			testData = ItemService.create("user@example.com", form);
+		}
+		String strKey = Datastore.keyToString(testData.getKey());
+
+		tester.request.setMethod("DELETE");
+		tester.request.setInputStream(TestUtil
+				.getResource("/json/item/delete_ng_conflict.json"));
+		tester.start(ItemController.PATH + "/" + strKey);
+		assertThat(tester.response.getStatus(),
+				is(HttpServletResponse.SC_CONFLICT));
+		assertThat(tester.response.getContentType(), is("application/json"));
+		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
+		assertThat(tester.response.getOutputAsString(), is("[\"conflict.\"]"));
+
+		Item stored = Datastore.getOrNull(ItemMeta.get(), testData.getKey());
+		assertThat(stored, notNullValue());
+	}
+
+	/**
+	 * {@link Item} 削除時に対象データがない場合、404が返ることを確認
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testDeletedItemForDataEmpty() throws Exception {
+		String strKey = Datastore.keyToString(ItemService.createKey("no data"));
+
+		tester.request.setMethod("DELETE");
+		tester.request.setInputStream(TestUtil
+				.getResource("/json/item/delete_ok.json"));
+		tester.start(ItemController.PATH + "/" + strKey);
 		assertThat(tester.response.getStatus(),
 				is(HttpServletResponse.SC_NOT_FOUND));
 		assertThat(tester.response.getContentType(), is("application/json"));

@@ -146,6 +146,32 @@ public class ItemServiceTest extends AbstructAppEngineTestCase {
 	}
 
 	/**
+	 * 削除 テスト
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testDelete() throws Exception {
+		final String EMAIl = "user@example.com";
+		Item newItem;
+		{
+			ItemController.PostForm form = new PostForm();
+			form.title = "sample title";
+			form.content = "sample content";
+
+			newItem = ItemService.create(EMAIl, form);
+		}
+
+		DeleteForm form = new DeleteForm();
+		form.version = newItem.getVersion();
+
+		ItemService.delete(newItem.getKey(), form);
+
+		Item stored = Datastore.getOrNull(ItemMeta.get(), newItem.getKey());
+		assertThat(stored, nullValue());
+	}
+
+	/**
 	 * Query時に対象データが無い場合、空のListを返すことをテスト
 	 * 
 	 * @throws Exception

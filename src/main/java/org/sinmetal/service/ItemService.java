@@ -90,6 +90,27 @@ public class ItemService {
 	}
 
 	/**
+	 * 指定した {@link Key} の {@link Item} を削除する
+	 * 
+	 * @param key
+	 *            {@link Item} {@link Key}
+	 * @param form
+	 *            RequestData
+	 */
+	public static void delete(Key key, DeleteForm form) {
+		Transaction tx = Datastore.beginTransaction();
+		try {
+			Datastore.get(tx, meta, key, form.version);
+			Datastore.delete(key);
+			tx.commit();
+		} finally {
+			if (tx != null && tx.isActive()) {
+				tx.rollback();
+			}
+		}
+	}
+
+	/**
 	 * {@link Item} を更新日時の降順で全件取得する
 	 * 
 	 * Index遅延を考慮した用心深い実装になっている。
