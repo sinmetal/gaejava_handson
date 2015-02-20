@@ -157,6 +157,16 @@ public class ItemController extends AbstructController {
 			response.setCharacterEncoding(UTF8);
 			om.writeValue(response.getWriter(), errors);
 			return;
+		} catch (EntityNotFoundRuntimeException e) {
+			errors = new ArrayList<>();
+			errors.add(strKey + " is not found.");
+
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+			response.setContentType(APPLICATION_JSON);
+			response.setCharacterEncoding(UTF8);
+			om.writeValue(response.getWriter(), errors);
+			return;
+
 		}
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentType(APPLICATION_JSON);

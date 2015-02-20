@@ -165,8 +165,30 @@ public class ItemControllerTest extends AbstructControllerTestCase {
 				is(HttpServletResponse.SC_CONFLICT));
 		assertThat(tester.response.getContentType(), is("application/json"));
 		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
-		assertThat(tester.response.getOutputAsString(),
-				is("[\"conflict.\"]"));
+		assertThat(tester.response.getOutputAsString(), is("[\"conflict.\"]"));
+	}
+
+	/**
+	 * {@link Item} 更新時に対象データがない場合、404が返ることを確認
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testUpdatedItemForDataEmpty() throws Exception {
+		String strKey = Datastore.keyToString(ItemService.createKey("no data"));
+
+		tester.request.setMethod("PUT");
+		tester.request.setInputStream(TestUtil
+				.getResource("/json/item/put_ok.json"));
+		tester.start(ItemController.PATH + "/" + strKey);
+
+		assertThat(tester.response.getStatus(),
+				is(HttpServletResponse.SC_NOT_FOUND));
+		assertThat(tester.response.getContentType(), is("application/json"));
+		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
+		assertThat(
+				tester.response.getOutputAsString(),
+				is("[\"agpVbml0IFRlc3RzchELEgRJdGVtIgdubyBkYXRhDA is not found.\"]"));
 	}
 
 	/**
