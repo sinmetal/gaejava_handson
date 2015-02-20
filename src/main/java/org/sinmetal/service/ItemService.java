@@ -75,7 +75,7 @@ public class ItemService {
 	public static Item update(Key key, PutForm form) {
 		Transaction tx = Datastore.beginTransaction();
 		try {
-			Item item = Datastore.get(tx, meta, key);
+			Item item = Datastore.get(tx, meta, key, form.version);
 			item.setTitle(form.title);
 			item.setContent(form.content);
 			Datastore.put(item);

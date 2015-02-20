@@ -132,6 +132,7 @@ public class ItemServiceTest extends AbstructAppEngineTestCase {
 		PutForm form = new PutForm();
 		form.title = "new title";
 		form.content = "new content";
+		form.version = newItem.getVersion();
 
 		ItemService.update(newItem.getKey(), form);
 

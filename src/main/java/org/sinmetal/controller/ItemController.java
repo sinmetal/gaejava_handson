@@ -144,7 +144,20 @@ public class ItemController extends AbstructController {
 			return;
 		}
 
-		Item stored = ItemService.update(key, form);
+		Item stored;
+		try {
+			stored = ItemService.update(key, form);
+		} catch (ConcurrentModificationException e) {
+			// 楽観的排他制御による衝突だけでなく、Txがぶつかった場合も、ここに来ることに注意
+			errors = new ArrayList<String>();
+			errors.add("conflict.");
+
+			response.setStatus(HttpServletResponse.SC_CONFLICT);
+			response.setContentType(APPLICATION_JSON);
+			response.setCharacterEncoding(UTF8);
+			om.writeValue(response.getWriter(), errors);
+			return;
+		}
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentType(APPLICATION_JSON);
 		response.setCharacterEncoding(UTF8);
@@ -160,6 +173,9 @@ public class ItemController extends AbstructController {
 		/** 本文 */
 		public String content;
 
+		/** 楽観的排他制御用のversion */
+		public Long version;
+
 		/**
 		 * validate
 		 * 
@@ -171,6 +187,9 @@ public class ItemController extends AbstructController {
 			List<String> errors = new ArrayList<>();
 			if (StringUtil.isEmpty(title)) {
 				errors.add("title is required.");
+			}
+			if (version == null) {
+				errors.add("version is required.");
 			}
 			return errors;
 		}

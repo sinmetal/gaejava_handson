@@ -35,6 +35,9 @@ public class Item {
 	@Attribute(listener = ModificationDate.class)
 	Date updatedAt;
 
+	@Attribute(version = true)
+	Long version;
+
 	/**
 	 * @return the key
 	 */
@@ -123,5 +126,20 @@ public class Item {
 	 */
 	public void setUpdatedAt(Date updatedAt) {
 		this.updatedAt = updatedAt;
+	}
+
+	/**
+	 * @return the version
+	 */
+	public Long getVersion() {
+		return version;
+	}
+
+	/**
+	 * @param version
+	 *            the version to set
+	 */
+	public void setVersion(Long version) {
+		this.version = version;
 	}
 }

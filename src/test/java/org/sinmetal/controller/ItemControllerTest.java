@@ -52,6 +52,7 @@ public class ItemControllerTest extends AbstructControllerTestCase {
 		assertThat(stored.getContent(), is("sample content"));
 		assertThat(stored.getCreatedAt(), notNullValue());
 		assertThat(stored.getUpdatedAt(), notNullValue());
+		assertThat(stored.getVersion(), notNullValue());
 	}
 
 	/**
@@ -107,6 +108,7 @@ public class ItemControllerTest extends AbstructControllerTestCase {
 		assertThat(stored.getContent(), is("new content"));
 		assertThat(stored.getCreatedAt(), notNullValue());
 		assertThat(stored.getUpdatedAt(), notNullValue());
+		assertThat(stored.getVersion(), notNullValue());
 	}
 
 	/**
@@ -135,7 +137,36 @@ public class ItemControllerTest extends AbstructControllerTestCase {
 		assertThat(tester.response.getContentType(), is("application/json"));
 		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
 		assertThat(tester.response.getOutputAsString(),
-				is("[\"title is required.\"]"));
+				is("[\"title is required.\",\"version is required.\"]"));
+	}
+
+	/**
+	 * {@link Item} 更新時楽観的排他制御がぶつかった場合にErrorになることをテスト
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testUpdatedItemConflict() throws Exception {
+		Item testData;
+		{
+			PostForm form = new PostForm();
+			form.title = "sample title";
+			form.content = "sample content";
+			testData = ItemService.create("user@example.com", form);
+		}
+		String strKey = Datastore.keyToString(testData.getKey());
+
+		tester.request.setMethod("PUT");
+		tester.request.setInputStream(TestUtil
+				.getResource("/json/item/put_ng_conflict.json"));
+		tester.start(ItemController.PATH + "/" + strKey);
+
+		assertThat(tester.response.getStatus(),
+				is(HttpServletResponse.SC_CONFLICT));
+		assertThat(tester.response.getContentType(), is("application/json"));
+		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
+		assertThat(tester.response.getOutputAsString(),
+				is("[\"conflict.\"]"));
 	}
 
 	/**
@@ -173,6 +204,7 @@ public class ItemControllerTest extends AbstructControllerTestCase {
 			assertThat(item.getContent(), is(src.getContent()));
 			assertThat(item.getCreatedAt(), is(src.getCreatedAt()));
 			assertThat(item.getUpdatedAt(), is(src.getUpdatedAt()));
+			assertThat(item.getVersion(), is(src.getVersion()));
 		}
 	}
 
@@ -217,6 +249,7 @@ public class ItemControllerTest extends AbstructControllerTestCase {
 		assertThat(item.getContent(), is(testData.getContent()));
 		assertThat(item.getCreatedAt(), is(testData.getCreatedAt()));
 		assertThat(item.getUpdatedAt(), is(testData.getUpdatedAt()));
+		assertThat(item.getVersion(), is(testData.getVersion()));
 	}
 
 	@Test
