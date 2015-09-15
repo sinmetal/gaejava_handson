@@ -21,14 +21,15 @@ public abstract class AbstructControllerTestCase extends ControllerTestCase {
 		dsConfig.setNoStorage(true);
 		dsConfig.setNoIndexAutoGen(true);
 
+		LocalMemcacheServiceTestConfig memcacheConfig = new LocalMemcacheServiceTestConfig();
+
 		LocalSearchServiceTestConfig ssConfig = new LocalSearchServiceTestConfig()
 				.setPersistent(false);
 		LocalBlobstoreServiceTestConfig blobConfig = new LocalBlobstoreServiceTestConfig();
 		LocalFileServiceTestConfig fileConfig = new LocalFileServiceTestConfig();
-		helper = new LocalServiceTestHelper(dsConfig, ssConfig, blobConfig,
-				fileConfig);
+		helper = new LocalServiceTestHelper(dsConfig, memcacheConfig, ssConfig,
+				blobConfig, fileConfig);
 
-		helper = new LocalServiceTestHelper(dsConfig);
 		helper.setUp();
 		super.setUp();
 	}
