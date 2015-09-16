@@ -3,6 +3,7 @@ package org.sinmetal.service;
 import java.util.*;
 
 import org.sinmetal.controller.ItemController.*;
+import org.sinmetal.controller.queue.*;
 import org.sinmetal.meta.*;
 import org.sinmetal.model.*;
 import org.slim3.datastore.*;
@@ -59,7 +60,17 @@ public class ItemService {
 		item.setEmail(email);
 		item.setTitle(form.title);
 		item.setContent(form.content);
-		Datastore.put(item);
+
+		Transaction tx = Datastore.beginTransaction();
+		try {
+			Datastore.put(item);
+			BatchController.call(tx, key);
+		} finally {
+			if (tx != null & tx.isActive()) {
+				tx.rollback();
+			}
+		}
+
 		return item;
 	}
 
