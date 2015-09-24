@@ -1,0 +1,4 @@
+machine:
+  timezone: Asia/Tokyo
+  java:
+    version: oraclejdk7
