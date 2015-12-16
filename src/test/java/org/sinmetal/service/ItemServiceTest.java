@@ -219,6 +219,32 @@ public class ItemServiceTest extends AbstructAppEngineTestCase {
 	}
 
 	/**
+	 * Emailでフィルタリングすることができることを確認するテスト
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testQuerySortUpdatedAtDescForEmailFilter() throws Exception {
+		final int SIZE = 10;
+		Map<Key, Item> testData = new HashMap<>();
+		{
+			for (int i = 0; i < SIZE; i++) {
+				PostForm form = new PostForm();
+				form.title = "sample title" + i;
+				form.content = "sample content" + i;
+				Item item = ItemService.create("user" + i + "@example.com",
+						form);
+				testData.put(item.getKey(), item);
+			}
+		}
+
+		List<Item> stored = ItemService
+				.querySortUpdatedAtDesc("user0@example.com");
+		assertThat(stored, notNullValue());
+		assertThat(stored.size(), is(1));
+	}
+
+	/**
 	 * 対象の {@link Key} の {@link Item} が無い場合、nullになることをテスト
 	 * 
 	 * @throws Exception

@@ -326,7 +326,9 @@ public class ItemController extends AbstructController {
 	}
 
 	void list() throws Exception {
-		List<Item> items = ItemService.querySortUpdatedAtDesc();
+		final String filterEmail = request.getParameter("email");
+
+		List<Item> items = ItemService.querySortUpdatedAtDesc(filterEmail);
 
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentType(APPLICATION_JSON);

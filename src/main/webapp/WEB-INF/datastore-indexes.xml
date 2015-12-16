@@ -1,0 +1,8 @@
+<!-- Indices written at Wed, 16 Dec 2015 19:29:46 JST -->
+
+<datastore-indexes autoGenerate="false">
+    <datastore-index kind="Item" ancestor="false" source="manual">
+        <property name="email" direction="asc"/>
+        <property name="updatedAt" direction="desc"/>
+    </datastore-index>
+</datastore-indexes>

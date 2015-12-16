@@ -337,6 +337,46 @@ public class ItemControllerTest extends AbstructControllerTestCase {
 	}
 
 	/**
+	 * Emailでフィルタリングができることを確認する
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testGetListForFilterEmail() throws Exception {
+		Map<Key, Item> testData = new HashMap<>();
+		{
+			for (int i = 0; i < 10; i++) {
+				PostForm form = new PostForm();
+				form.title = "sample title" + i;
+				form.content = "sample content" + i;
+				Item item = ItemService.create("user" + i + "@example.com",
+						form);
+				testData.put(item.getKey(), item);
+			}
+		}
+
+		tester.request.setMethod("GET");
+		tester.request.setParameter("email", "user1@example.com");
+		tester.start(ItemController.PATH);
+		assertThat(tester.response.getStatus(), is(HttpServletResponse.SC_OK));
+		assertThat(tester.response.getContentType(), is("application/json"));
+		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
+		Item[] results = ItemMeta.get().jsonToModels(
+				tester.response.getOutputAsString());
+		assertThat(results.length, is(1));
+		for (Item item : results) {
+			assertThat(testData.containsKey(item.getKey()), is(true));
+			Item src = testData.get(item.getKey());
+			assertThat(item.getEmail(), is(src.getEmail()));
+			assertThat(item.getTitle(), is(src.getTitle()));
+			assertThat(item.getContent(), is(src.getContent()));
+			assertThat(item.getCreatedAt(), is(src.getCreatedAt()));
+			assertThat(item.getUpdatedAt(), is(src.getUpdatedAt()));
+			assertThat(item.getVersion(), is(src.getVersion()));
+		}
+	}
+
+	/**
 	 * {@link Item} が0件の場合に、正常に一覧取得ができることを確認
 	 * 
 	 * @throws Exception

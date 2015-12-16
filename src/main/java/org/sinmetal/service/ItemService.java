@@ -6,6 +6,7 @@ import org.sinmetal.controller.ItemController.*;
 import org.sinmetal.meta.*;
 import org.sinmetal.model.*;
 import org.slim3.datastore.*;
+import org.slim3.util.StringUtil;
 
 import com.google.appengine.api.datastore.*;
 
@@ -118,8 +119,25 @@ public class ItemService {
 	 * @return 更新日時の降順の {@link Item} 全件
 	 */
 	public static List<Item> querySortUpdatedAtDesc() {
-		List<Key> keys = Datastore.query(meta).sort(meta.updatedAt.desc)
-				.asKeyList();
+		return querySortUpdatedAtDesc(null);
+	}
+
+	/**
+	 * {@link Item} を更新日時の降順で全件取得する
+	 * 
+	 * Index遅延を考慮した用心深い実装になっている。
+	 * 
+	 * @param email
+	 *            フィルタリング条件に使う作成者のemail
+	 * @return 更新日時の降順の {@link Item} 全件
+	 */
+	public static List<Item> querySortUpdatedAtDesc(String email) {
+		ModelQuery<Item> query = Datastore.query(meta);
+		if (StringUtil.isEmpty(email) == false) {
+			query = query.filter(meta.email.equal(email));
+		}
+		List<Key> keys = query.sort(meta.updatedAt.desc).asKeyList();
+
 		Map<Key, Item> map = Datastore.getAsMap(meta, keys);
 
 		List<Item> results = new ArrayList<>();
