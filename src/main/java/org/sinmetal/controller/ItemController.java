@@ -1,18 +1,26 @@
 package org.sinmetal.controller;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import javax.servlet.http.*;
+import javax.servlet.http.HttpServletResponse;
 
-import org.codehaus.jackson.map.*;
-import org.sinmetal.meta.*;
-import org.sinmetal.model.*;
-import org.sinmetal.service.*;
-import org.slim3.controller.*;
-import org.slim3.datastore.*;
-import org.slim3.util.*;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.sinmetal.meta.ItemMeta;
+import org.sinmetal.model.Item;
+import org.sinmetal.service.ItemService;
+import org.slim3.controller.Navigation;
+import org.slim3.datastore.Datastore;
+import org.slim3.datastore.EntityNotFoundRuntimeException;
+import org.slim3.util.StringUtil;
 
-import com.google.appengine.api.datastore.*;
+import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.users.User;
+import com.google.appengine.api.users.UserService;
+import com.google.appengine.api.users.UserServiceFactory;
 
 /**
  * {@link Item} に関するAPI
@@ -52,6 +60,17 @@ public class ItemController extends AbstructController {
 	void doPost() throws Exception {
 		final ObjectMapper om = new ObjectMapper();
 
+		UserService userService = UserServiceFactory.getUserService();
+		if (userService.isUserLoggedIn() == false) {
+			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+			response.setContentType(APPLICATION_JSON);
+			response.setCharacterEncoding(UTF8);
+			Map<String, String> map = new HashMap<>();
+			map.put("loginURL", userService.createLoginURL("/"));
+			om.writeValue(response.getWriter(), map);
+			return;
+		}
+
 		PostForm form;
 		try {
 			form = om.readValue(request.getInputStream(), PostForm.class);
@@ -68,8 +87,8 @@ public class ItemController extends AbstructController {
 			return;
 		}
 
-		// FIXME Item作成者のEmailをLoginUserのものに修正する
-		Item stored = ItemService.create("user@example.com", form);
+		User currentUser = userService.getCurrentUser();
+		Item stored = ItemService.create(currentUser.getEmail(), form);
 
 		response.setStatus(HttpServletResponse.SC_CREATED);
 		response.setContentType(APPLICATION_JSON);

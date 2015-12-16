@@ -34,6 +34,8 @@ public class ItemControllerTest extends AbstructControllerTestCase {
 	 */
 	@Test
 	public void testCreatedItem() throws Exception {
+		tester.environment.setEmail("test@example.com");
+
 		tester.request.setMethod("POST");
 		tester.request.setInputStream(TestUtil
 				.getResource("/json/item/post_ok.json"));
@@ -63,6 +65,8 @@ public class ItemControllerTest extends AbstructControllerTestCase {
 	 */
 	@Test
 	public void testCreatedItemNoTitle() throws Exception {
+		tester.environment.setEmail("test@example.com");
+
 		tester.request.setMethod("POST");
 		tester.request.setInputStream(TestUtil
 				.getResource("/json/item/post_ng.json"));
@@ -73,6 +77,25 @@ public class ItemControllerTest extends AbstructControllerTestCase {
 		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
 		assertThat(tester.response.getOutputAsString(),
 				is("[\"title is required.\"]"));
+	}
+
+	/**
+	 * ログインせずにアイテム登録しようとした場合、403が返ってくることを確認
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testCreatedItemNoLogin() throws Exception {
+		tester.request.setMethod("POST");
+		tester.request.setInputStream(TestUtil
+				.getResource("/json/item/post_ng.json"));
+		tester.start(ItemController.PATH);
+		assertThat(tester.response.getStatus(),
+				is(HttpServletResponse.SC_FORBIDDEN));
+		assertThat(tester.response.getContentType(), is("application/json"));
+		assertThat(tester.response.getCharacterEncoding(), is("utf-8"));
+		assertThat(tester.response.getOutputAsString(),
+				is("{\"loginURL\":\"/_ah/login?continue=%2F\"}"));
 	}
 
 	/**
