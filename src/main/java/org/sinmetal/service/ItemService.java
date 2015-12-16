@@ -1,14 +1,22 @@
 package org.sinmetal.service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-import org.sinmetal.controller.ItemController.*;
-import org.sinmetal.meta.*;
-import org.sinmetal.model.*;
-import org.slim3.datastore.*;
+import org.sinmetal.controller.ItemController.DeleteForm;
+import org.sinmetal.controller.ItemController.PostForm;
+import org.sinmetal.controller.ItemController.PutForm;
+import org.sinmetal.controller.queue.BatchController;
+import org.sinmetal.meta.ItemMeta;
+import org.sinmetal.model.Item;
+import org.slim3.datastore.Datastore;
+import org.slim3.datastore.ModelQuery;
 import org.slim3.util.StringUtil;
 
-import com.google.appengine.api.datastore.*;
+import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.Transaction;
 
 /**
  * {@link Item} のユーティリティ
@@ -60,7 +68,18 @@ public class ItemService {
 		item.setEmail(email);
 		item.setTitle(form.title);
 		item.setContent(form.content);
-		Datastore.put(item);
+
+		Transaction tx = Datastore.beginTransaction();
+		try {
+			Datastore.put(item);
+			BatchController.call(tx, key);
+			tx.commit();
+		} finally {
+			if (tx != null & tx.isActive()) {
+				tx.rollback();
+			}
+		}
+
 		return item;
 	}
 

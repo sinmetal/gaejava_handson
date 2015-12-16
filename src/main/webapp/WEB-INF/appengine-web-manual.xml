@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
 	<application>gaejava_hungson</application>
-	<module>backend</module>
+	<module>manual</module>
 	<version>1</version>
 
-	<basic-scaling>
-    	<max-instances>2</max-instances>
-    	<idle-timeout>10s</idle-timeout>
-    </basic-scaling>
+	<manual-scaling>
+    	<instances>1</instances>
+  	</manual-scaling>
 
 	<static-files>
 		<include path="/**.*" />

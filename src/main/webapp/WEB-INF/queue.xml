@@ -8,4 +8,10 @@
     <rate>10/s</rate>
     <bucket-size>10</bucket-size>
   </queue>
+    <queue>
+    <name>batch</name>
+    <rate>10/s</rate>
+    <bucket-size>10</bucket-size>
+    <target>backend</target>
+  </queue>
 </queue-entries>
